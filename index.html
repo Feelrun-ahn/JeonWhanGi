@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f4f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101217" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="전환기">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<title>3학년 전환기 일정</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* layout: one narrow column, sticky top bar with view switch; day = period grid, month = Mon–Fri grid */
+:root{
+  --bg:#f4f5f7; --surface:#ffffff; --ink:#15171c; --muted:#6a707d; --line:#e3e6eb; --accent:#2747d6;
+  --accent-soft:#e8ecfc;
+  --font:"IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+
+  --choir-bg:#fbe4f0; --choir-fg:#9a2a68;
+  --trip-bg:#fdf1c4; --trip-fg:#7a5a00;
+  --test-bg:#e7ebf1; --test-fg:#3b4657;
+  --make-bg:#ddf3df; --make-fg:#22652d;
+  --grad-bg:#fde3c8; --grad-fg:#8a4710;
+  --sport-bg:#dfe6fb; --sport-fg:#2c46a8;
+  --edu-bg:#fde6dc; --edu-fg:#99401f;
+  --study-bg:#f1f2f4; --study-fg:#3d424c;
+  --off-bg:#fde0df; --off-fg:#b02a24;
+  --club-bg:#ece7f6; --club-fg:#55408a;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101217; --surface:#191c23; --ink:#eceef3; --muted:#9298a6; --line:#2a2e38; --accent:#8fa3ff; --accent-soft:#1f2640;
+    --choir-bg:#3a1d2e; --choir-fg:#f5a9d2;
+    --trip-bg:#352d10; --trip-fg:#f1d377;
+    --test-bg:#252a33; --test-fg:#c2cad8;
+    --make-bg:#17311c; --make-fg:#94d89e;
+    --grad-bg:#3a2611; --grad-fg:#f4b77a;
+    --sport-bg:#1c2546; --sport-fg:#a9b9f4;
+    --edu-bg:#3a2119; --edu-fg:#f3a98b;
+    --study-bg:#21242b; --study-fg:#c4c8d1;
+    --off-bg:#3b1a1a; --off-fg:#ff9b94;
+    --club-bg:#29223b; --club-fg:#c3b3ef;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101217; --surface:#191c23; --ink:#eceef3; --muted:#9298a6; --line:#2a2e38; --accent:#8fa3ff; --accent-soft:#1f2640;
+  --choir-bg:#3a1d2e; --choir-fg:#f5a9d2;
+  --trip-bg:#352d10; --trip-fg:#f1d377;
+  --test-bg:#252a33; --test-fg:#c2cad8;
+  --make-bg:#17311c; --make-fg:#94d89e;
+  --grad-bg:#3a2611; --grad-fg:#f4b77a;
+  --sport-bg:#1c2546; --sport-fg:#a9b9f4;
+  --edu-bg:#3a2119; --edu-fg:#f3a98b;
+  --study-bg:#21242b; --study-fg:#c4c8d1;
+  --off-bg:#3b1a1a; --off-fg:#ff9b94;
+  --club-bg:#29223b; --club-fg:#c3b3ef;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.wrap{max-width:640px;margin:0 auto;padding:0 16px 40px}
+
+/* top bar */
+.top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top-in{max-width:640px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;flex-direction:column;line-height:1.2}
+.brand small{font-size:12px;color:var(--muted);font-weight:500}
+.brand strong{font-size:17px;font-weight:700;letter-spacing:-.01em}
+.seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:6px 14px;border-radius:7px;font-size:14px;font-weight:500;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+
+/* upcoming */
+.section-label{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.02em;margin:20px 0 8px}
+.upcoming{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;margin:0 -16px;padding-left:16px;padding-right:16px}
+.upcoming::-webkit-scrollbar{display:none}
+.up{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px;min-width:132px;text-align:left;display:flex;flex-direction:column;gap:2px}
+.up .dd{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.up .t{font-size:14px;font-weight:600;white-space:nowrap}
+.up .d{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.up .dd.soon{color:var(--accent)}
+
+/* day header */
+.dayhead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:22px}
+.dayhead h1{margin:0;font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.15;text-wrap:balance}
+.dayhead .sub{font-size:13px;color:var(--muted);margin-top:4px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;font-size:12px;font-weight:600;background:var(--accent-soft);color:var(--accent)}
+.nav{display:flex;gap:6px;flex-shrink:0}
+.iconbtn{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center}
+.iconbtn:disabled{opacity:.35;cursor:default}
+.iconbtn svg{width:18px;height:18px}
+.textbtn{height:38px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:13px;font-weight:600}
+
+/* week strip */
+.week{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:16px}
+.wd{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:8px 0 9px;display:flex;flex-direction:column;align-items:center;gap:3px}
+.wd .w{font-size:11px;color:var(--muted);font-weight:500}
+.wd .n{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums}
+.wd .dots{display:flex;gap:3px;height:6px}
+.wd .dots i{width:6px;height:6px;border-radius:50%}
+.wd[aria-current="date"]{background:var(--ink);border-color:var(--ink)}
+.wd[aria-current="date"] .w,.wd[aria-current="date"] .n{color:var(--bg)}
+.wd.today:not([aria-current="date"]) .n{color:var(--accent)}
+.wd:disabled{opacity:.35;cursor:default}
+
+/* periods */
+.periods{display:grid;grid-template-columns:52px 1fr;grid-template-rows:repeat(7,minmax(58px,auto));column-gap:10px;row-gap:6px;margin-top:18px}
+.plabel{grid-column:1;display:flex;flex-direction:column;justify-content:center;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--muted);border-top:1px solid var(--line);padding-top:2px}
+.plabel b{font-size:18px;color:var(--ink);font-weight:600;line-height:1}
+.plabel .tm{font-size:11px;font-weight:500;margin-top:2px}
+.plabel.now b,.plabel.now span{color:var(--accent)}
+.block.now{box-shadow:0 0 0 2px var(--accent)}
+.tch{display:flex;flex-wrap:wrap;gap:2px 10px;font-size:12.5px;font-weight:500;color:var(--ink);opacity:.62}
+.tch small{font-size:10.5px;font-weight:400;margin-left:2px}
+.tch em{font-style:normal;font-size:10.5px;font-weight:600;margin-right:3px;font-variant-numeric:tabular-nums}
+.tch .rg{font-weight:600;color:var(--c-fg)}
+
+/* motion */
+.seg{position:relative}
+.seg .ind{position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 4px);border-radius:7px;background:var(--ink);transition:transform .28s cubic-bezier(.3,.7,.2,1)}
+.seg.month .ind{transform:translateX(calc(100% + 2px))}
+.seg button{position:relative;z-index:1;flex:1;transition:color .2s}
+.seg button[aria-pressed="true"]{background:transparent}
+button{transition:transform .12s ease, background-color .2s, border-color .2s}
+button:active:not(:disabled){transform:scale(.96)}
+@media (prefers-reduced-motion:no-preference){
+  .block,.allday{animation:rise .38s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0)*35ms)}
+  .cell:not(.out){animation:rise .3s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0)*12ms)}
+  .up{animation:rise .35s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0)*40ms)}
+  .slide-l .dayhead,.slide-l .periods,.slide-l .allday{animation:slideL .3s cubic-bezier(.2,.7,.2,1) both}
+  .slide-r .dayhead,.slide-r .periods,.slide-r .allday{animation:slideR .3s cubic-bezier(.2,.7,.2,1) both}
+  .block.now{animation:rise .38s cubic-bezier(.2,.7,.2,1) both, pulse 2.4s ease-in-out .6s infinite}
+  @keyframes rise{from{opacity:.25;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes slideL{from{opacity:.3;transform:translateX(22px)}to{opacity:1;transform:none}}
+  @keyframes slideR{from{opacity:.3;transform:translateX(-22px)}to{opacity:1;transform:none}}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 2px var(--accent)}50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--accent) 25%,transparent)}}
+}
+.hint{font-size:12px;color:var(--muted)}
+.block{grid-column:2;border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;justify-content:center;gap:3px;background:var(--c-bg);color:var(--c-fg);border-left:4px solid var(--c-fg)}
+.block .bt{font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-.01em}
+.block .bm{font-size:12px;font-weight:500;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.block .note{font-size:12px;color:var(--ink);opacity:.8}
+.chip{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:6px;font-size:11.5px;font-weight:600;background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.chip.mine{background:var(--accent);border-color:var(--accent);color:#fff}
+.block.empty{background:transparent;border:1px dashed var(--line);border-left:1px dashed var(--line);color:var(--muted)}
+.block.empty .bt{color:var(--muted);font-weight:500;font-size:14px}
+
+.allday{margin-top:18px;border-radius:16px;padding:22px 20px;background:var(--c-bg);color:var(--c-fg);display:flex;flex-direction:column;gap:6px;border-left:5px solid var(--c-fg)}
+.allday .k{font-size:12px;font-weight:700;letter-spacing:.02em}
+.allday .t{font-size:24px;font-weight:700;color:var(--ink);letter-spacing:-.01em;text-wrap:balance}
+.allday .s{font-size:14px;color:var(--ink);opacity:.75}
+
+/* month */
+.monthhead{display:flex;align-items:center;justify-content:space-between;margin-top:22px}
+.monthhead h1{margin:0;font-size:24px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.mgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin-top:14px}
+.mdow{font-size:12px;color:var(--muted);font-weight:600;text-align:center;padding-bottom:4px}
+.cell{min-height:92px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px 6px 7px;text-align:left;display:flex;flex-direction:column;gap:3px;overflow:hidden}
+.cell .cn{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;display:flex;justify-content:space-between;align-items:center}
+.cell.out{background:transparent;border-color:transparent}
+.cell.out .cn{color:var(--muted);opacity:.5}
+.cell.nodata{cursor:default}
+.cell.nodata .cn{color:var(--muted)}
+.cell.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.cell.today .cn{color:var(--accent)}
+.tag{font-size:11px;line-height:1.3;font-weight:600;border-radius:5px;padding:2px 5px;background:var(--c-bg);color:var(--c-fg);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:keep-all;overflow-wrap:anywhere;max-height:calc(2.6em + 4px);flex-shrink:0}
+.more{font-size:11px;color:var(--muted);padding-left:2px}
+.mine-dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:16px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:10px;height:10px;border-radius:3px;background:var(--c-bg);border:1.5px solid var(--c-fg)}
+
+/* settings / footer */
+.settings{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.settings label{font-size:14px;font-weight:600}
+.settings p{margin:2px 0 0;font-size:12px;color:var(--muted)}
+.settings select{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:6px 10px;font-size:14px}
+.foot{margin-top:18px;font-size:12px;color:var(--muted);line-height:1.6}
+
+[hidden]{display:none !important}
+@media (max-width:420px){
+  .dayhead h1{font-size:24px}
+  .cell{min-height:84px;padding:5px 4px 6px}
+  .tag{font-size:10.5px;padding:2px 4px}
+  .seg button{padding:6px 11px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .view{animation:fade .18s ease-out}
+  @keyframes fade{from{opacity:.4}to{opacity:1}}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><small>2026 · 3학년 15반</small><strong>전환기 일정</strong></div>
+    <div class="seg" role="group" aria-label="보기 방식">
+      <span class="ind" aria-hidden="true"></span>
+      <button id="btnDay" type="button" aria-pressed="true">하루</button>
+      <button id="btnMonth" type="button" aria-pressed="false">달력</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="section-label">다가오는 큰 일정</div>
+  <div class="upcoming" id="upcoming"></div>
+
+  <section id="dayView" class="view"></section>
+  <section id="monthView" class="view" hidden></section>
+
+  <p class="foot">「2026 3학년 전환기 교육과정 안내」 가정통신문과 3학년 15반 시간표(12월 4일까지 맞바꾼 시간 반영)를 기준으로 정리했습니다. 학교 사정에 따라 일정이나 담당 선생님이 바뀔 수 있습니다.</p>
+</main>
+
+<script>
+/* ---------- data (가정통신문 표 기준) ---------- */
+const A = (t, s, cat) => ({ all: t, sub: s || "", cat });
+const D = {
+  "2026-11-09": A("1기 교과 프로그램", "시간표대로 운영", "study"),
+  "2026-11-10": A("1기 교과 프로그램", "시간표대로 운영", "study"),
+  "2026-11-11": A("1기 교과 프로그램", "시간표대로 운영", "study"),
+  "2026-11-12": A("1기 교과 프로그램", "시간표대로 운영", "study"),
+  "2026-11-13": A("1기 교과 프로그램", "시간표대로 운영", "study"),
+  "2026-11-16": A("1기 교과 프로그램", "시간표대로 운영", "study"),
+  "2026-11-17": A("1기 교과 프로그램", "시간표대로 운영", "study"),
+  "2026-11-18": A("동아리", "동아리 4 · 수능 감독관 예비소집일", "club"),
+  "2026-11-19": A("재량휴업일", "대학수학능력시험", "off"),
+  "2026-11-20": A("재량휴업일", "", "off"),
+
+  "2026-11-23": ["전환기 안내","자기주도학습","합창연습","합창연습","모루인형 만들기","자기주도학습",""],
+  "2026-11-24": ["독서","자기주도학습","합창연습","합창연습","스크래치 페이퍼","두뇌게임","고교학점제"],
+  "2026-11-25": A("롯데월드", "문화체험", "trip"),
+  "2026-11-26": ["스포츠클럽","자기주도학습","합창연습","합창연습",["민주주의 선거교실",2],"교과프로그램"],
+  "2026-11-27": [["모의고사",2],"합창연습","합창연습","교과프로그램","두뇌게임",""],
+  "2026-11-30": ["독서","자기주도학습","합창연습","합창연습","교과프로그램","고교학점제",""],
+
+  "2026-12-01": ["독서","자기주도학습","합창연습","합창연습","반 대항 연습","생명존중","교과프로그램"],
+  "2026-12-02": ["독서","자기주도학습","합창연습","합창연습","오르골 만들기","교과프로그램",""],
+  "2026-12-03": ["스포츠클럽","자기주도학습","합창연습","합창연습",["목도리 제작",2],"도박예방"],
+  "2026-12-04": [["모의고사",2],"합창연습","합창연습","교과프로그램","반 대항 연습",""],
+  "2026-12-07": [["독서",1,"주식",[2,15]],"자기주도학습",["합창연습",1,"주식",[1,14]],"합창연습",["합창연습",1,"주식",[10,5]],"자기주도학습",""],
+  "2026-12-08": [["독서",1,"주식",[8,3]],"자기주도학습",["합창연습",1,"주식",[4,9]],"합창연습",["합창연습",1,"주식",[13,7]],"자기주도학습","기후위기"],
+  "2026-12-09": [["진로 콘서트",2,"진로진학부"],"합창연습","합창연습",["풋살",2],""],
+  "2026-12-10": A("합창 리허설", "하루 종일 리허설", "choir"),
+  "2026-12-11": [["독서",1,"주식",[12]],"자기주도학습",["합창연습",1,"주식",[6]],"합창연습",["합창연습",1,"주식",[11]],"자기주도학습",""],
+  "2026-12-14": A("뮤지컬 관람", "문화체험 (공연)", "trip"),
+  "2026-12-15": [["모의고사",2],"합창연습","합창연습",["",3]],
+  "2026-12-16": A("국립중앙박물관", "역사체험", "trip"),
+  "2026-12-17": A("합창 대회", "문화체험", "choir"),
+  "2026-12-18": ["독서",["분할 스티커 제작",2],["동아리",4]],
+  "2026-12-21": ["독서","자기주도학습","졸업영상 만들기 1","졸업영상 만들기 2","크리스마스 꾸미기 (리스)","크리스마스 꾸미기 (눈꽃)",""],
+  "2026-12-22": ["독서","자기주도학습","반 대항 예선 (공기)","반 대항 예선 (눈싸움)","졸업영상 만들기 3",["배구",2]],
+  "2026-12-23": ["독서","자기주도학습",["배구",2],["협동화 제작 (크리스마스)",2],""],
+  "2026-12-24": ["스포츠클럽","자기주도학습","반 대항 예선 (오목)","크리스마스 카드 만들기","졸업영상 만들기 4",["대토론회",2]],
+  "2026-12-25": A("크리스마스", "쉬는 날", "off"),
+  "2026-12-28": ["독서","자기주도학습",["반 대항 결승 (방송 송출)",4,"눈싸움 준결승·결승 / 공기 결승 / 오목 결승"],""],
+  "2026-12-29": ["독서","자기주도학습","졸업영상 만들기 5",["자율",3],""],
+  "2026-12-30": A("영화 관람", "문화체험", "trip"),
+  "2026-12-31": ["스포츠클럽","자기주도학습","졸업영상 상영",["교과프로그램",2],["에코백 제작",2]],
+
+  "2027-01-01": A("신정", "쉬는 날", "off"),
+  "2027-01-04": ["독서","자기주도학습",["진로체험 (영상 관람)",2],"편지 쓰기","교과프로그램",""],
+  "2027-01-05": ["독서","자기주도학습",["졸업앨범 롤링 페이퍼",2],"교과프로그램",["진로체험 (영상 관람)",2]],
+  "2027-01-06": ["독서","자기주도학습","교과프로그램",["학급 대청소",2],"졸업식 예행연습",""],
+  "2027-01-07": A("졸업식", "창의적 체험활동 2", "grad"),
+};
+
+/* 3-15 원래 시간표 — 요일별 1~7교시 담당 선생님 */
+const TT = {
+  1:["오혜은","오혜은","조정하","정지연","주지애","오진혁",""],
+  2:["권한비","조정하","정지연","조정하","고유빈","우아롱","이은지"],
+  3:["유상연","조정하","권선혜","고유빈","주지애","이주희",""],
+  4:["임수○","권한비","정지연","","오진혁","이은지","고유빈"],
+  5:["권선혜","우아롱","고유빈","유상연","정지연","주지애",""],
+};
+/* 주별로 서로 맞바꾼 시간 (컴시간 노란 칸) — "날짜": {교시: 선생님} */
+const SWAP = {
+  "2026-11-26": {6:"고유빈", 7:"이은지"},
+  "2026-11-30": {2:"권한비"},
+  "2026-12-03": {2:"오혜은"},
+};
+function teachersOf(k){
+  const base=(TT[parse(k).getDay()]||[]).slice(), sw=SWAP[k]||{};
+  for(const p in sw) base[p-1]=sw[p];
+  return base;
+}
+const TIMES=["09:00","09:55","10:50","11:45","13:30","14:25","15:20"];
+const MY_CLASS="15";
+
+const CATS = {
+  choir:{n:"합창"}, trip:{n:"체험"}, test:{n:"모의고사"}, make:{n:"만들기"}, grad:{n:"졸업"},
+  sport:{n:"스포츠·게임"}, edu:{n:"교과·교육"}, study:{n:"학습"}, club:{n:"동아리"}, off:{n:"쉬는 날"}
+};
+const LEGEND = ["choir","trip","test","make","grad","sport","edu","off"];
+
+function catOf(t){
+  if(!t) return null;
+  if(/합창/.test(t)) return "choir";
+  if(/졸업영상|졸업식/.test(t)) return "grad";
+  if(/체험|콘서트/.test(t)) return "trip";
+  if(/모의고사/.test(t)) return "test";
+  if(/풋살|배구|대항|두뇌게임|스포츠/.test(t)) return "sport";
+  if(/만들기|제작|꾸미기|페이퍼|쓰기|모루/.test(t)) return "make";
+  if(/선거|생명|도박|기후|학점제|교과|토론/.test(t)) return "edu";
+  if(/동아리/.test(t)) return "club";
+  return "study";
+}
+const ROUTINE = new Set(["독서","자기주도학습","합창연습","교과프로그램",""]);
+
+/* normalise period rows → [{t, span, start, note, classes}] */
+function periodsOf(raw){
+  const out=[]; let p=1;
+  for(const it of raw){
+    const [t,span=1,note="",classes=null] = Array.isArray(it)?it:[it];
+    out.push({t,span,start:p,note,classes});
+    p+=span;
+  }
+  return out;
+}
+
+/* ---------- dates ---------- */
+const pad=n=>String(n).padStart(2,"0");
+const key=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parse=k=>{const [y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d)};
+const DOW=["일","월","화","수","목","금","토"];
+const KEYS=Object.keys(D).sort();
+const todayKey=key(new Date());
+const diffDays=(a,b)=>Math.round((parse(b)-parse(a))/86400000);
+
+/* 화·목은 16:25, 월·수·금은 15:15 이후엔 다음 수업일을 보여줌 */
+let advanced=false;
+function defaultKey(){
+  advanced=false;
+  const now=new Date(), dow=now.getDay(), mins=now.getHours()*60+now.getMinutes();
+  const cutoff=(dow===2||dow===4)?16*60+25:15*60+15;
+  if(D[todayKey] && mins<cutoff) return todayKey;
+  const next=KEYS.find(k=>k>todayKey);
+  if(D[todayKey] && next) advanced=true;
+  return next || KEYS[KEYS.length-1];
+}
+function nowPeriod(){
+  const n=new Date(), m=n.getHours()*60+n.getMinutes();
+  for(let i=0;i<7;i++){ const [h,mm]=TIMES[i].split(":").map(Number), s=h*60+mm; if(m>=s && m<s+45) return i+1; }
+  return 0;
+}
+
+/* ---------- state ---------- */
+let view="day", cur=defaultKey(), month=null;
+let defaultKeyCache=cur, autoCur=true;
+const myClass=MY_CLASS;
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const cv=c=>`--c-bg:var(--${c}-bg);--c-fg:var(--${c}-fg)`;
+
+function isMine(classes){ return myClass && classes && classes.includes(Number(myClass)); }
+function dayHasMine(k){
+  const v=D[k]; if(!v||v.all) return false;
+  return periodsOf(v).some(x=>isMine(x.classes));
+}
+function catsOfDay(k){
+  const v=D[k]; if(!v) return [];
+  if(v.all) return [v.cat];
+  const s=[]; for(const x of periodsOf(v)){const c=catOf(x.t); if(c && c!=="study" && !s.includes(c)) s.push(c);} return s;
+}
+function relLabel(k){
+  const n=diffDays(todayKey,k);
+  if(n===0) return "오늘"; if(n===1) return "내일"; if(n===-1) return "어제";
+  return n>0?`D-${n}`:`${-n}일 전`;
+}
+
+/* ---------- upcoming ---------- */
+function renderUpcoming(){
+  const items=[];
+  for(const k of KEYS){
+    if(k<todayKey) continue;
+    const v=D[k];
+    if(v.all && v.cat!=="study") items.push({k,t:v.all,c:v.cat});
+    else if(!v.all && periodsOf(v).some(x=>x.t==="모의고사")) items.push({k,t:"모의고사",c:"test"});
+  }
+  $("#upcoming").innerHTML = items.slice(0,8).map((it,ix)=>{
+    const d=parse(it.k), n=diffDays(todayKey,it.k);
+    return `<button class="up" type="button" data-go="${it.k}" style="${cv(it.c)};--i:${ix}">
+      <span class="dd ${n<=3?"soon":""}">${relLabel(it.k)}</span>
+      <span class="t">${esc(it.t)}</span>
+      <span class="d">${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})</span>
+    </button>`;
+  }).join("") || `<span class="foot">남은 큰 일정이 없습니다.</span>`;
+}
+
+/* ---------- day view ---------- */
+const chevL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>';
+const chevR='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>';
+
+function renderDay(){
+  const d=parse(cur), v=D[cur], i=KEYS.indexOf(cur);
+  const rel=relLabel(cur);
+  let html=`<div class="dayhead">
+    <div>
+      <h1>${d.getMonth()+1}월 ${d.getDate()}일 ${DOW[d.getDay()]}요일</h1>
+      <div class="sub"><span class="pill">${rel}</span>${advanced && cur===defaultKeyCache?'<span class="hint">오늘 수업 끝</span>':""}${dayHasMine(cur)?'<span class="pill" style="background:var(--accent);color:#fff">우리 반 주식 수업</span>':""}</div>
+    </div>
+    <div class="nav">
+      ${cur!==todayKey && D[todayKey]?'<button class="textbtn" type="button" data-go="'+todayKey+'">오늘</button>':""}
+      <button class="iconbtn" type="button" id="prev" aria-label="이전 날" ${i<=0?"disabled":""}>${chevL}</button>
+      <button class="iconbtn" type="button" id="next" aria-label="다음 날" ${i>=KEYS.length-1?"disabled":""}>${chevR}</button>
+    </div>
+  </div>`;
+
+  // week strip (Mon–Fri)
+  const mon=new Date(d); mon.setDate(d.getDate()-((d.getDay()+6)%7));
+  html+=`<div class="week">`;
+  for(let j=0;j<5;j++){
+    const x=new Date(mon); x.setDate(mon.getDate()+j); const k=key(x);
+    const dots=catsOfDay(k).slice(0,3).map(c=>`<i style="background:var(--${c}-fg)"></i>`).join("");
+    html+=`<button class="wd ${k===todayKey?"today":""}" type="button" data-go="${k}" ${k===cur?'aria-current="date"':""} ${D[k]?"":"disabled"}>
+      <span class="w">${DOW[x.getDay()]}</span><span class="n">${x.getDate()}</span><span class="dots">${dots}</span></button>`;
+  }
+  html+=`</div>`;
+
+  if(v.all){
+    const kind = v.cat==="off"?"쉬는 날":v.cat==="study"?"정상 수업":"하루 종일";
+    html+=`<div class="allday" style="${cv(v.cat)}">
+      <span class="k">${kind}</span>
+      <span class="t">${esc(v.all)}</span>
+      ${v.sub?`<span class="s">${esc(v.sub)}</span>`:""}
+    </div>`;
+  }else{
+    html+=`<div class="periods">`;
+    const np = cur===todayKey ? nowPeriod() : 0;
+    const tt = teachersOf(cur);
+    let bi=0;
+    for(let p=1;p<=7;p++) html+=`<div class="plabel ${p===np?"now":""}" style="grid-row:${p}"><b>${p}</b><span>교시</span><span class="tm">${TIMES[p-1]}</span></div>`;
+    for(const x of periodsOf(v)){
+      const row=`grid-row:${x.start} / span ${x.span}`;
+      if(!x.t){
+        html+=`<div class="block empty" style="${row};--i:${bi++}"><span class="bt">수업 없음</span></div>`;
+        continue;
+      }
+      const c=catOf(x.t);
+      let extra="";
+      if(x.classes){
+        extra=`<div class="bm">${x.classes.map(n=>`<span class="chip ${String(n)===String(myClass)?"mine":""}">주식 ${n}반</span>`).join("")}</div>`;
+      }else if(x.note){
+        extra=`<span class="note">${esc(x.note)}</span>`;
+      }
+      const tch=[];
+      for(let q=x.start;q<x.start+x.span;q++){ const n=tt[q-1]; if(n) tch.push({q,n}); }
+      const range = x.span>1 ? `<span class="rg">${x.start}–${x.start+x.span-1}교시</span>` : "";
+      const teach = (tch.length||range) ? `<div class="tch">${range}${tch.map(o=>`<span>${x.span>1?`<em>${o.q}</em>`:""}${esc(o.n)}<small>선생님</small></span>`).join("")}</div>` : "";
+      const isNow = np && np>=x.start && np<x.start+x.span;
+      html+=`<div class="block ${isNow?"now":""}" style="${row};${cv(c)};--i:${bi++}">
+        <span class="bt">${esc(x.t)}</span>${teach}${extra}</div>`;
+    }
+    html+=`</div>`;
+  }
+  const dv=$("#dayView");
+  dv.classList.remove("slide-l","slide-r"); void dv.offsetWidth;
+  if(slideDir) dv.classList.add(slideDir);
+  slideDir="";
+  dv.innerHTML=html;
+  $("#prev").onclick=()=>{ if(i>0) go(KEYS[i-1]); };
+  $("#next").onclick=()=>{ if(i<KEYS.length-1) go(KEYS[i+1]); };
+}
+
+/* ---------- month view ---------- */
+const MONTHS=["2026-11","2026-12","2027-01"];
+function renderMonth(){
+  if(!month) month=cur.slice(0,7);
+  const mi=MONTHS.indexOf(month);
+  const [y,m]=month.split("-").map(Number);
+  let html=`<div class="monthhead">
+    <h1>${y}년 ${m}월</h1>
+    <div class="nav">
+      <button class="iconbtn" type="button" id="mprev" aria-label="이전 달" ${mi<=0?"disabled":""}>${chevL}</button>
+      <button class="iconbtn" type="button" id="mnext" aria-label="다음 달" ${mi>=MONTHS.length-1?"disabled":""}>${chevR}</button>
+    </div></div>`;
+  html+=`<div class="mgrid">`+["월","화","수","목","금"].map(w=>`<div class="mdow">${w}</div>`).join("");
+
+  const first=new Date(y,m-1,1), last=new Date(y,m,0);
+  const start=new Date(first); start.setDate(1-((first.getDay()+6)%7));
+  let ci=0;
+  for(let d=new Date(start); d<=last || d.getDay()!==1; d.setDate(d.getDate()+1)){
+    if(d.getDay()===0||d.getDay()===6) continue;
+    const k=key(d), inMonth=d.getMonth()===m-1, v=D[k];
+    if(!inMonth){ html+=`<div class="cell out" aria-hidden="true"><span class="cn">${d.getDate()}</span></div>`; continue; }
+    if(!v){ html+=`<div class="cell nodata ${k===todayKey?"today":""}"><span class="cn">${d.getDate()}</span></div>`; continue; }
+    let tags="";
+    if(v.all){
+      tags=`<span class="tag" style="${cv(v.cat)}">${esc(v.all)}</span>`;
+    }else{
+      const seen=new Set(), list=[];
+      for(const x of periodsOf(v)){ if(ROUTINE.has(x.t)||seen.has(x.t)) continue; seen.add(x.t); list.push(x.t); }
+      if(!list.length && periodsOf(v).some(x=>x.t==="합창연습")) list.push("합창연습");
+      tags=list.slice(0,2).map(t=>`<span class="tag" style="${cv(catOf(t))}">${esc(t)}</span>`).join("");
+      if(list.length>2) tags+=`<span class="more">+${list.length-2}</span>`;
+    }
+    html+=`<button class="cell ${k===todayKey?"today":""}" style="--i:${ci++}" type="button" data-go="${k}" aria-label="${m}월 ${d.getDate()}일">
+      <span class="cn">${d.getDate()}${dayHasMine(k)?'<span class="mine-dot" title="우리 반 주식 수업"></span>':""}</span>${tags}</button>`;
+  }
+  html+=`</div><div class="legend">`+LEGEND.map(c=>`<span style="${cv(c)}"><i></i>${CATS[c].n}</span>`).join("")+`</div>`;
+  $("#monthView").innerHTML=html;
+  $("#mprev").onclick=()=>{ if(mi>0){month=MONTHS[mi-1];renderMonth();} };
+  $("#mnext").onclick=()=>{ if(mi<MONTHS.length-1){month=MONTHS[mi+1];renderMonth();} };
+}
+
+/* ---------- routing ---------- */
+function setHash(h){ try{ history.replaceState(null,"",h?"#"+h:location.pathname+location.search); }catch(e){ location.hash=h; } }
+let slideDir="";
+function go(k){ autoCur=false; slideDir = view==="day" && k!==cur ? (k>cur?"slide-l":"slide-r") : ""; cur=k; view="day"; month=k.slice(0,7); setHash("d-"+k.replace(/-/g,"")); render(); window.scrollTo({top:0}); }
+function render(){
+  $("#btnDay").setAttribute("aria-pressed",view==="day");
+  $("#btnMonth").setAttribute("aria-pressed",view==="month");
+  document.querySelector(".seg").classList.toggle("month",view==="month");
+  $("#dayView").hidden=view!=="day";
+  $("#monthView").hidden=view!=="month";
+  renderUpcoming();
+  view==="day"?renderDay():renderMonth();
+}
+function fromHash(){
+  const h=location.hash.slice(1);
+  if(h==="month"){ view="month"; }
+  else if(/^d-\d{8}$/.test(h)){ const k=`${h.slice(2,6)}-${h.slice(6,8)}-${h.slice(8,10)}`; if(D[k]){cur=k;view="day";} }
+}
+document.addEventListener("click",e=>{ const b=e.target.closest("[data-go]"); if(b) go(b.dataset.go); });
+$("#btnDay").onclick=()=>{ view="day"; setHash("d-"+cur.replace(/-/g,"")); render(); };
+$("#btnMonth").onclick=()=>{ view="month"; month=cur.slice(0,7); setHash("month"); render(); };
+window.addEventListener("hashchange",()=>{ fromHash(); render(); });
+
+// swipe between days
+let sx=null, sy=null;
+$("#dayView").addEventListener("touchstart",e=>{ sx=e.touches[0].clientX; sy=e.touches[0].clientY; },{passive:true});
+$("#dayView").addEventListener("touchend",e=>{
+  if(sx===null) return;
+  const dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy; sx=null;
+  if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.5){
+    const i=KEYS.indexOf(cur);
+    if(dx<0 && i<KEYS.length-1) go(KEYS[i+1]);
+    if(dx>0 && i>0) go(KEYS[i-1]);
+  }
+},{passive:true});
+
+
+fromHash(); render();
+
+// 홈 화면 앱으로 다시 열었을 때 시간에 맞춰 오늘/내일을 다시 계산
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState!=="visible" || !autoCur) return;
+  const k=defaultKey();
+  if(k!==cur || advanced){ cur=k; defaultKeyCache=k; month=k.slice(0,7); render(); }
+});
+if("serviceWorker" in navigator){ try{ navigator.serviceWorker.register("sw.js"); }catch(e){} }
+</script>
+</body>
+</html>
