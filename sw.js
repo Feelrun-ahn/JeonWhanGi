@@ -1,5 +1,5 @@
 // 네트워크 먼저, 안 되면 저장해 둔 걸 보여주는 서비스 워커 (오프라인에서도 열림)
-const CACHE = "jeonhwangi-v3";
+const CACHE = "jeonhwangi-v4";
 
 self.addEventListener("install", (e) => {
   e.waitUntil(
